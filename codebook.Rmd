@@ -1,0 +1,240 @@
+---
+title: "Codebook"
+author: "Justin Barrett"
+output: html_document
+---
+
+One of the most exciting areas in all of data science right now is wearable computing - see for example this article . Companies like Fitbit, Nike, and Jawbone Up are racing to develop the most advanced algorithms to attract new users.
+
+##Study design and data processing
+This project's purpose is to take the messy data taken from the accelerometers and turn it into tidy data that can later be used for analysis.
+
+###Collection of the raw data 
+Data was collected from the accelerometers from the Samsung Galaxy S smartphone.
+
+##Creating the tidy datafile
+First the training and test sets were merged to create one dataset. Then the mean and standard deviation for each were extracted for each measurement. Then the activities in the dataset were renamed to descriptive names. Next, proper variable names were given to the variables. Lastly, a second, independent tidy dataset was vreated with the average of each variable for each activity and each subject.
+
+###Guide to create the tidy data file 
+Description on how to create the tidy data file (1. download the data, ...)/
+
+###Cleaning of the data 
+Short, high-level description of what the cleaning script does. link to the readme document that describes the code in greater detail
+
+##Description of the datasets
+For "Data" dataset:
+
+```{r echo=FALSE}
+if(!file.exists("./files")){dir.create("./files")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl,destfile="./files/Dataset.zip",method="curl")
+
+unzip(zipfile="./files/Dataset.zip",exdir="./files")
+
+path_rf <- file.path("./data" , "UCI HAR Dataset")
+
+## read the different data files into tables
+featurestrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
+activitytrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
+subjecttrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
+activitytest <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
+subjecttest <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
+featurestest <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
+
+
+## combine the test and the training sets
+subjectboth <- rbind(subjecttrain, subjecttest)
+activityboth <- rbind(activitytrain, activitytest)
+featuresboth <- rbind(featurestrain, featurestest)
+
+## name the datasets
+names(subjectboth) <- c("subject")
+names(activityboth) <- c("activity")
+featuresnames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
+names(featuresboth) <- featuresnames$V2
+
+mergedata <- cbind(subjectboth, activityboth)
+Data <- cbind(featuresboth, mergedata)
+
+subsetfeaturesnames<- featuresnames$V2[grep("mean\\(\\)|std\\(\\)", featuresnames$V2)]
+
+names <- c(as.character(subsetfeaturesnames), "subject", "activity" )
+Data <- subset(Data, select = names)
+
+activitylabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
+
+names(Data) <- gsub("^t", "time", names(Data))
+names(Data) <- gsub("^f", "frequency", names(Data))
+names(Data) < -gsub("Acc", "Accelerometer", names(Data))
+names(Data) <- gsub("Gyro", "Gyroscope", names(Data))
+names(Data) <- gsub("Mag", "Magnitude", names(Data))
+names(Data) <- gsub("BodyBody", "Body", names(Data))
+
+library(plyr);
+Data2 <- aggregate(. ~subject + activity, Data, mean)
+Data2 <- Data2[order(Data2$subject,Data2$activity),]
+
+dim(Data)
+```
+
+```{r echo=FALSE}
+if(!file.exists("./files")){dir.create("./files")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl,destfile="./files/Dataset.zip",method="curl")
+
+unzip(zipfile="./files/Dataset.zip",exdir="./files")
+
+path_rf <- file.path("./data" , "UCI HAR Dataset")
+
+## read the different data files into tables
+featurestrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
+activitytrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
+subjecttrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
+activitytest <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
+subjecttest <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
+featurestest <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
+
+
+## combine the test and the training sets
+subjectboth <- rbind(subjecttrain, subjecttest)
+activityboth <- rbind(activitytrain, activitytest)
+featuresboth <- rbind(featurestrain, featurestest)
+
+## name the datasets
+names(subjectboth) <- c("subject")
+names(activityboth) <- c("activity")
+featuresnames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
+names(featuresboth) <- featuresnames$V2
+
+mergedata <- cbind(subjectboth, activityboth)
+Data <- cbind(featuresboth, mergedata)
+
+subsetfeaturesnames<- featuresnames$V2[grep("mean\\(\\)|std\\(\\)", featuresnames$V2)]
+
+names <- c(as.character(subsetfeaturesnames), "subject", "activity" )
+Data <- subset(Data, select = names)
+
+activitylabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
+
+names(Data) <- gsub("^t", "time", names(Data))
+names(Data) <- gsub("^f", "frequency", names(Data))
+names(Data) < -gsub("Acc", "Accelerometer", names(Data))
+names(Data) <- gsub("Gyro", "Gyroscope", names(Data))
+names(Data) <- gsub("Mag", "Magnitude", names(Data))
+names(Data) <- gsub("BodyBody", "Body", names(Data))
+
+library(plyr);
+Data2 <- aggregate(. ~subject + activity, Data, mean)
+Data2 <- Data2[order(Data2$subject,Data2$activity),]
+
+dim(Data2)
+```
+
+###Variables
+Names of the variables:
+
+```{r echo=FALSE}
+if(!file.exists("./files")){dir.create("./files")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl,destfile="./files/Dataset.zip",method="curl")
+
+unzip(zipfile="./files/Dataset.zip",exdir="./files")
+
+path_rf <- file.path("./data" , "UCI HAR Dataset")
+
+## read the different data files into tables
+featurestrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
+activitytrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
+subjecttrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
+activitytest <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
+subjecttest <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
+featurestest <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
+
+
+## combine the test and the training sets
+subjectboth <- rbind(subjecttrain, subjecttest)
+activityboth <- rbind(activitytrain, activitytest)
+featuresboth <- rbind(featurestrain, featurestest)
+
+## name the datasets
+names(subjectboth) <- c("subject")
+names(activityboth) <- c("activity")
+featuresnames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
+names(featuresboth) <- featuresnames$V2
+
+mergedata <- cbind(subjectboth, activityboth)
+Data <- cbind(featuresboth, mergedata)
+
+subsetfeaturesnames<- featuresnames$V2[grep("mean\\(\\)|std\\(\\)", featuresnames$V2)]
+
+names <- c(as.character(subsetfeaturesnames), "subject", "activity" )
+Data <- subset(Data, select = names)
+
+activitylabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
+
+names(Data) <- gsub("^t", "time", names(Data))
+names(Data) <- gsub("^f", "frequency", names(Data))
+names(Data) < -gsub("Acc", "Accelerometer", names(Data))
+names(Data) <- gsub("Gyro", "Gyroscope", names(Data))
+names(Data) <- gsub("Mag", "Magnitude", names(Data))
+names(Data) <- gsub("BodyBody", "Body", names(Data))
+
+library(plyr);
+Data2 <- aggregate(. ~subject + activity, Data, mean)
+Data2 <- Data2[order(Data2$subject,Data2$activity),]
+
+names(Data)
+```
+
+```{r echo=FALSE}
+if(!file.exists("./files")){dir.create("./files")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl,destfile="./files/Dataset.zip",method="curl")
+
+unzip(zipfile="./files/Dataset.zip",exdir="./files")
+
+path_rf <- file.path("./data" , "UCI HAR Dataset")
+
+## read the different data files into tables
+featurestrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
+activitytrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
+subjecttrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
+activitytest <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
+subjecttest <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
+featurestest <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
+
+
+## combine the test and the training sets
+subjectboth <- rbind(subjecttrain, subjecttest)
+activityboth <- rbind(activitytrain, activitytest)
+featuresboth <- rbind(featurestrain, featurestest)
+
+## name the datasets
+names(subjectboth) <- c("subject")
+names(activityboth) <- c("activity")
+featuresnames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
+names(featuresboth) <- featuresnames$V2
+
+mergedata <- cbind(subjectboth, activityboth)
+Data <- cbind(featuresboth, mergedata)
+
+subsetfeaturesnames<- featuresnames$V2[grep("mean\\(\\)|std\\(\\)", featuresnames$V2)]
+
+names <- c(as.character(subsetfeaturesnames), "subject", "activity" )
+Data <- subset(Data, select = names)
+
+activitylabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
+
+names(Data) <- gsub("^t", "time", names(Data))
+names(Data) <- gsub("^f", "frequency", names(Data))
+names(Data) < -gsub("Acc", "Accelerometer", names(Data))
+names(Data) <- gsub("Gyro", "Gyroscope", names(Data))
+names(Data) <- gsub("Mag", "Magnitude", names(Data))
+names(Data) <- gsub("BodyBody", "Body", names(Data))
+
+library(plyr);
+Data2 <- aggregate(. ~subject + activity, Data, mean)
+Data2 <- Data2[order(Data2$subject,Data2$activity),]
+
+names(Data2)
+```
